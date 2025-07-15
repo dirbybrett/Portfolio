@@ -6,6 +6,54 @@
   <title>Social Video Grid</title>
   <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
+
+    /* Scroll bounce animation */
+.tile {
+  position: relative;
+  padding-bottom: 177.77%;
+  overflow: hidden;
+  border-radius: 10px; /* Adjust rounding here */
+  cursor: pointer;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.tile.visible {
+  animation: bounceIn 0.6s ease forwards;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: translateY(40px) scale(0.98);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-10px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+    <script>
+const tiles = document.querySelectorAll('.tile');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((entry, index) => {
+    if (entry.isIntersecting) {
+      entry.target.style.setProperty('--delay', `${index * 0.05}s`);
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target); // only trigger once
+    }
+  });
+}, {
+  threshold: 0.2
+});
+
+tiles.forEach(tile => observer.observe(tile));
+</script>
+    
     body {
       font-family: sans-serif;
       background: white;
