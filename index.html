@@ -6,54 +6,6 @@
   <title>Social Video Grid</title>
   <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
-
-    /* Scroll bounce animation */
-.tile {
-  position: relative;
-  padding-bottom: 177.77%;
-  overflow: hidden;
-  border-radius: 10px; /* Adjust rounding here */
-  cursor: pointer;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.tile.visible {
-  animation: bounceIn 0.6s ease forwards;
-}
-
-@keyframes bounceIn {
-  0% {
-    transform: translateY(40px) scale(0.98);
-    opacity: 0;
-  }
-  60% {
-    transform: translateY(-10px) scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-    <script>
-const tiles = document.querySelectorAll('.tile');
-const observer = new IntersectionObserver(entries => {
-  entries.forEach((entry, index) => {
-    if (entry.isIntersecting) {
-      entry.target.style.setProperty('--delay', `${index * 0.05}s`);
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target); // only trigger once
-    }
-  });
-}, {
-  threshold: 0.2
-});
-
-tiles.forEach(tile => observer.observe(tile));
-</script>
-    
     body {
       font-family: sans-serif;
       background: white;
@@ -71,6 +23,7 @@ tiles.forEach(tile => observer.observe(tile));
       transition: filter 0.3s;
       max-width: 1150px;
     }
+
     h1:hover {
       filter: none;
     }
@@ -85,11 +38,13 @@ tiles.forEach(tile => observer.observe(tile));
 
     .tile {
       position: relative;
-      padding-bottom: 177.77%; /* 16:9 */
+      padding-bottom: 177.77%;
       overflow: hidden;
       border-radius: 15px;
       cursor: pointer;
       transition: transform 0.3s ease;
+      opacity: 0;
+      transform: translateY(30px);
     }
 
     .tile:hover {
@@ -115,6 +70,12 @@ tiles.forEach(tile => observer.observe(tile));
     .tile.active iframe {
       pointer-events: auto;
       z-index: 2;
+    }
+
+    .tile.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
     }
   </style>
 </head>
@@ -153,7 +114,6 @@ videoIds.forEach(id => {
   tile.addEventListener('click', () => {
     if (tile.classList.contains('active')) return;
 
-    // Remove active state from previous tile
     if (activeTile) {
       activeTile.classList.remove('active');
       const prevId = activeTile.dataset.id;
@@ -163,7 +123,6 @@ videoIds.forEach(id => {
       prevPlayer.play().catch(()=>{});
     }
 
-    // Set current tile as active
     tile.classList.add('active');
     activeTile = tile;
 
@@ -173,7 +132,6 @@ videoIds.forEach(id => {
       player.play();
     });
 
-    // When video is paused or ends, restore preview mode
     const restorePreview = () => {
       tile.classList.remove('active');
       player.setVolume(0);
@@ -189,5 +147,19 @@ videoIds.forEach(id => {
   });
 });
 </script>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.tile').forEach(tile => observer.observe(tile));
+</script>
+
 </body>
 </html>
