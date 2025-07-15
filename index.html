@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Social Video Grid</title>
   <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
@@ -12,6 +12,7 @@
       color: black;
       margin: 0;
       padding: 1rem;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -40,18 +41,26 @@
 
     .tile {
       position: relative;
-      padding-bottom: 177.77%; /* 16:9 aspect ratio */
-      overflow: hidden;
+      padding-bottom: 177.77%;
       border-radius: 20px;
+      overflow: hidden;
       cursor: pointer;
-      background-color: black;
+      transform: translateY(30px);
+      opacity: 0;
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
+
+    .tile.visible {
+      transform: translateY(0);
+      opacity: 1;
     }
 
     .tile iframe {
       position: absolute;
-      top:0; left:0;
-      width:100%; height:100%;
-      border:none;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
       filter: blur(4px);
       transition: filter 0.3s;
       pointer-events: none;
@@ -61,6 +70,10 @@
     .tile.active iframe {
       filter: none;
     }
+
+    .tile.active iframe {
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
@@ -69,10 +82,12 @@
 
   <script>
     const videoIds = [
-      1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,
-      1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,
-      1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,
-      1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,
+      1101392507,1101392493,1101392480,1101392467,
+      1101392450,1101392444,1101392376,1101392429,
+      1101392418,1101392403,1101392396,1101392387,
+      1101392368,1101392357,1101376171,1101376163,
+      1101376152,1101376143,1101392350,1101376127,
+      1101376116,1101392340,1101392328,1101392322,
       1101392311,1101392301,1101392288,1101392282
     ];
 
@@ -90,37 +105,50 @@
       tile.appendChild(iframe);
       grid.appendChild(tile);
 
-      tile.addEventListener('click', () => {
-        if (tile.classList.contains('active')) return;
-
-        // Reset all previews
-        tiles.forEach(t => {
-          const tId = t.dataset.id;
-          const tIframe = t.querySelector('iframe');
-          t.classList.remove('active');
-          tIframe.src = `https://player.vimeo.com/video/${tId}?autoplay=1&muted=1&loop=1&background=1`;
-        });
-
-        // Set active tile
-        tile.classList.add('active');
-        iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
-
-        const activePlayer = new Vimeo.Player(iframe);
-        activePlayer.on('pause', () => resetAllPreviews());
-        activePlayer.on('ended', () => resetAllPreviews());
-      });
-
-      tiles.push(tile);
+      const previewPlayer = new Vimeo.Player(iframe);
+      tiles.push({tile, id, previewPlayer});
     });
 
-    function resetAllPreviews() {
-      tiles.forEach(t => {
-        const id = t.dataset.id;
+    grid.addEventListener('click', (e) => {
+      const tile = e.target.closest('.tile');
+      if (!tile || tile.classList.contains('active')) return;
+
+      const id = tile.dataset.id;
+
+      tiles.forEach(({tile: t, id: tid, previewPlayer}) => {
         const iframe = t.querySelector('iframe');
         t.classList.remove('active');
-        iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+        iframe.src = `https://player.vimeo.com/video/${tid}?autoplay=1&muted=1&loop=1&background=1`;
       });
-    }
+
+      tile.classList.add('active');
+      const activeIframe = tile.querySelector('iframe');
+      activeIframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
+
+      const activePlayer = new Vimeo.Player(activeIframe);
+      activePlayer.on('pause', () => {
+        tile.classList.remove('active');
+        activeIframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+      });
+      activePlayer.on('ended', () => {
+        tile.classList.remove('active');
+        activeIframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+      });
+    });
+
+    // Bounce scroll animation using IntersectionObserver
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.1});
+
+    document.querySelectorAll('.tile').forEach(tile => {
+      observer.observe(tile);
+    });
   </script>
 </body>
 </html>
