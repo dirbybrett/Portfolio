@@ -18,11 +18,11 @@
     h1 {
       font-size: 5rem;
       margin-bottom: 2rem;
-      filter: blur(3px);
+      filter: blur(2px);
       transition: filter 0.3s;
+      max-width: 1150px;
       margin-left: auto;
       margin-right: auto;
-      max-width: 1150px;
     }
 
     h1:hover {
@@ -73,7 +73,7 @@
     }
 
     .preview {
-      filter: blur(4px);
+      filter: blur(2px);
       transition: filter 0.3s;
       z-index: 1;
       pointer-events: none;
@@ -117,14 +117,12 @@ videoIds.forEach(id => {
   const tile = document.createElement('div');
   tile.className = 'tile';
 
-  // Preview iframe
   const preview = document.createElement('iframe');
   preview.className = 'preview';
   preview.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
   preview.allow = 'autoplay; fullscreen';
   tile.appendChild(preview);
 
-  // Main player iframe
   const player = document.createElement('iframe');
   player.className = 'player';
   player.src = `https://player.vimeo.com/video/${id}?autoplay=0&muted=0&controls=1`;
@@ -134,25 +132,33 @@ videoIds.forEach(id => {
   const playerInstance = new Vimeo.Player(player);
 
   tile.addEventListener('click', () => {
-    // Close any other active players
+    // Close others
     document.querySelectorAll('.tile.active').forEach(other => {
       if (other !== tile) {
         other.classList.remove('active');
-        const p = new Vimeo.Player(other.querySelector('.player'));
-        p.pause();
+        const otherPlayer = new Vimeo.Player(other.querySelector('.player'));
+        otherPlayer.pause();
+
+        // Restart preview
+        const previewFrame = other.querySelector('.preview');
+        const vidId = previewFrame.src.split('/video/')[1].split('?')[0];
+        previewFrame.src = `https://player.vimeo.com/video/${vidId}?autoplay=1&muted=1&loop=1&background=1`;
       }
     });
 
+    // Activate clicked tile
     tile.classList.add('active');
     playerInstance.play();
   });
 
-  // Return to preview after pause/end
   playerInstance.on('pause', () => {
     tile.classList.remove('active');
+    preview.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
   });
+
   playerInstance.on('ended', () => {
     tile.classList.remove('active');
+    preview.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
   });
 
   grid.appendChild(tile);
