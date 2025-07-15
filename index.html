@@ -2,31 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Social Video Grid</title>
   <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
     body {
+      font-family: sans-serif;
+      background: white;
+      color: black;
       margin: 0;
       padding: 1rem;
-      background: white;
-      font-family: sans-serif;
-      color: black;
     }
 
     h1 {
       font-size: 7rem;
       font-weight: 700;
+      margin: 1rem auto;
+      line-height: 1;
       filter: blur(3px);
       transition: filter 0.3s;
-      line-height: 1;
-      margin-left: 1rem;
-      margin-bottom: 2rem;
-      text-align: left;
+      max-width: 1150px;
     }
-
     h1:hover {
-      filter: blur(0);
+      filter: none;
     }
 
     #video-grid {
@@ -34,17 +32,15 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       max-width: 1150px;
-      margin: 0 auto;
+      margin: 1rem auto;
     }
 
     .tile {
       position: relative;
-      padding-bottom: 177.77%; /* 16:9 ratio */
+      padding-bottom: 177.77%; /* 16:9 */
       overflow: hidden;
       border-radius: 20px;
-      background: white;
       cursor: pointer;
-      transform: scale(1);
       transition: transform 0.3s ease;
     }
 
@@ -59,9 +55,8 @@
       height: 100%;
       border: none;
       filter: blur(4px);
-      transition: filter 0.3s ease;
+      transition: filter 0.3s;
       pointer-events: none;
-      background: white;
     }
 
     .tile:hover iframe,
@@ -69,88 +64,82 @@
       filter: none;
     }
 
-    /* Scroll animation */
-    .tile {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.6s ease-out;
-    }
-
-    .tile.visible {
-      opacity: 1;
-      transform: translateY(0);
+    .tile.active iframe {
+      pointer-events: auto;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
-  <h1>SOCIAL</h1>
-  <div id="video-grid"></div>
 
-  <script>
-    const videoIds = [
-      1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,
-      1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,
-      1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,
-      1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,
-      1101392311,1101392301,1101392288,1101392282
-    ];
+<h1>SOCIAL</h1>
+<div id="video-grid"></div>
 
-    const grid = document.getElementById("video-grid");
-    const tiles = [];
+<script>
+const videoIds = [
+  1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,
+  1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,
+  1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,
+  1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,
+  1101392311,1101392301,1101392288,1101392282
+];
 
-    videoIds.forEach(id => {
-      const tile = document.createElement("div");
-      tile.className = "tile";
-      tile.dataset.id = id;
+const grid = document.getElementById('video-grid');
+const players = {};
+let activeTile = null;
 
-      const iframe = document.createElement("iframe");
-      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
-      iframe.allow = "autoplay; fullscreen";
-      tile.appendChild(iframe);
-      grid.appendChild(tile);
-      tiles.push({ tile, iframe, id });
-    });
+videoIds.forEach(id => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.dataset.id = id;
 
-    // Resume play for all tiles
-    function resumePreviews(exceptId = null) {
-      tiles.forEach(({ tile, iframe, id }) => {
-        if (id !== exceptId) {
-          tile.classList.remove("active");
-          iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
-        }
-      });
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+  iframe.allow = 'autoplay; fullscreen';
+  tile.appendChild(iframe);
+  grid.appendChild(tile);
+
+  const player = new Vimeo.Player(iframe);
+  players[id] = player;
+
+  tile.addEventListener('click', () => {
+    if (tile.classList.contains('active')) return;
+
+    // Remove active state from previous tile
+    if (activeTile) {
+      activeTile.classList.remove('active');
+      const prevId = activeTile.dataset.id;
+      const prevPlayer = players[prevId];
+      prevPlayer.setVolume(0);
+      prevPlayer.setLoop(true);
+      prevPlayer.play().catch(()=>{});
     }
 
-    // Tile click handler
-    tiles.forEach(({ tile, iframe, id }) => {
-      tile.addEventListener("click", () => {
-        if (tile.classList.contains("active")) return;
+    // Set current tile as active
+    tile.classList.add('active');
+    activeTile = tile;
 
-        resumePreviews(id);
-
-        tile.classList.add("active");
-        iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
-
-        const player = new Vimeo.Player(iframe);
-        player.on("pause", () => {
-          resumePreviews();
-        });
-        player.on("ended", () => {
-          resumePreviews();
-        });
-      });
+    player.setVolume(1);
+    player.setLoop(false);
+    player.setCurrentTime(0).then(() => {
+      player.play();
     });
 
-    // Scroll animation using IntersectionObserver
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-        }
-      });
-    }, { threshold: 0.15 });
+    // When video is paused or ends, restore preview mode
+    const restorePreview = () => {
+      tile.classList.remove('active');
+      player.setVolume(0);
+      player.setLoop(true);
+      player.play().catch(()=>{});
+      activeTile = null;
+    };
 
-    document.querySelectorAll(".tile").forEach(tile => observer.observe(tile));
-  </script>
+    player.off('pause');
+    player.off('ended');
+    player.on('pause', restorePreview);
+    player.on('ended', restorePreview);
+  });
+});
+</script>
 </body>
 </html>
