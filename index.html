@@ -4,24 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Social Video Grid</title>
-  
+  <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
     body {
-      margin: 0;
       font-family: sans-serif;
-      background: #ffffff;
-      color: #000000;
+      background: #fff;
+      color: #000;
+      margin: 0;
+      padding: 1rem;
     }
 
-    #video-header {
-      text-align: center;
-      margin: 1rem 0;
+    h1 {
       font-size: 7rem;
-      font-weight: 700;
+      text-align: center;
+      margin: 0 auto 2rem;
       filter: blur(3px);
       transition: filter 0.3s;
+      max-width: 1150px;
     }
-    #video-header:hover { filter: none; }
+    h1:hover { filter: blur(0); }
 
     #video-grid {
       display: grid;
@@ -29,106 +30,94 @@
       gap: 16px;
       max-width: 1150px;
       margin: 0 auto;
-      padding: 1rem;
     }
 
     .tile {
       position: relative;
-      width: 100%;
-      padding-bottom: 177.77%;
-      overflow: hidden;
+      padding-bottom: 177.77%; /* 16:9 */
       border-radius: 20px;
+      overflow: hidden;
       cursor: pointer;
-      background-color: #000;
+      background: black;
     }
 
     .tile iframe {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
       pointer-events: none;
-    }
-
-    .tile.active iframe { pointer-events: auto; }
-
-    .cover {
       filter: blur(4px);
-      transition: filter 0.3s;
+      transition: filter 0.3s ease;
     }
 
-    .tile:hover .cover, .tile.active .cover { filter: none; }
+    .tile:hover iframe, .tile.active iframe {
+      filter: none;
+    }
   </style>
-
-  <script src="https://player.vimeo.com/api/player.js"></script>
 </head>
 <body>
 
-  <h1 id="video-header">SOCIAL&nbsp;</h1>
-  <div id="video-grid"></div>
+<h1>SOCIAL&nbsp;</h1>
+<div id="video-grid"></div>
 
-  <script>
-    const ids = [1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,1101392311,1101392301,1101392288,1101392282];
+<script>
+const videoIds = [1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,1101392311,1101392301,1101392288,1101392282];
 
-    const grid = document.getElementById('video-grid');
+const grid = document.getElementById('video-grid');
+const tiles = [];
 
-    ids.forEach(id => {
-      const tile = document.createElement('div');
-      tile.className = 'tile';
+// Create tiles and initialize preview players
+videoIds.forEach(id => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.dataset.videoId = id;
 
-      const cover = document.createElement('iframe');
-      cover.className = 'cover';
-      cover.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
-      cover.allow = 'autoplay; fullscreen';
-      tile.appendChild(cover);
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&loop=1&muted=1&background=1`;
+  iframe.allow = 'autoplay; fullscreen';
+  
+  tile.appendChild(iframe);
+  grid.appendChild(tile);
 
-      grid.appendChild(tile);
+  const previewPlayer = new Vimeo.Player(iframe);
 
-      const previewPlayer = new Vimeo.Player(cover);
+  tile.addEventListener('click', () => {
+    if (tile.classList.contains('active')) return;
 
-      tile.addEventListener('click', () => {
-        if (tile.classList.contains('active')) return;
-
-        document.querySelectorAll('.tile.active').forEach(activeTile => {
-          activeTile.classList.remove('active');
-          activeTile.querySelector('iframe').remove();
-          const idx = Array.from(grid.children).indexOf(activeTile);
-          const restoredCover = document.createElement('iframe');
-          restoredCover.className = 'cover';
-          restoredCover.src = `https://player.vimeo.com/video/${ids[idx]}?autoplay=1&muted=1&loop=1&background=1`;
-          restoredCover.allow = 'autoplay; fullscreen';
-          activeTile.appendChild(restoredCover);
-          new Vimeo.Player(restoredCover);
-        });
-
-        tile.classList.add('active');
-        previewPlayer.pause();
-
-        const playerIframe = document.createElement('iframe');
-        playerIframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
-        playerIframe.allow = 'autoplay; fullscreen';
-        tile.innerHTML = '';
-        tile.appendChild(playerIframe);
-
-        const player = new Vimeo.Player(playerIframe);
-
-        player.on('pause', () => {
-          tile.classList.remove('active');
-          playerIframe.remove();
-          tile.appendChild(cover);
-          previewPlayer.play();
-        });
-
-        player.on('ended', () => {
-          tile.classList.remove('active');
-          playerIframe.remove();
-          tile.appendChild(cover);
-          previewPlayer.play();
-        });
-      });
+    // Reset active tiles
+    tiles.forEach(t => {
+      if (t.classList.contains('active')) {
+        t.classList.remove('active');
+        const currentIframe = t.querySelector('iframe');
+        currentIframe.src = `https://player.vimeo.com/video/${t.dataset.videoId}?autoplay=1&loop=1&muted=1&background=1`;
+        currentIframe.pointerEvents = 'none';
+      }
     });
-  </script>
+
+    // Activate clicked tile
+    tile.classList.add('active');
+    iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
+    iframe.style.pointerEvents = 'auto';
+
+    const activePlayer = new Vimeo.Player(iframe);
+
+    activePlayer.on('pause', () => {
+      tile.classList.remove('active');
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&loop=1&muted=1&background=1`;
+      iframe.style.pointerEvents = 'none';
+    });
+
+    activePlayer.on('ended', () => {
+      tile.classList.remove('active');
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&loop=1&muted=1&background=1`;
+      iframe.style.pointerEvents = 'none';
+    });
+  });
+
+  tiles.push(tile);
+});
+</script>
 
 </body>
 </html>
