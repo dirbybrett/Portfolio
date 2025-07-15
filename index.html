@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Social Video Grid</title>
+  <script src="https://player.vimeo.com/api/player.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: white;
+      color: black;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 7rem;
+      margin-bottom: 1rem;
+      filter: blur(3px);
+      transition: filter 0.3s;
+    }
+    h1:hover {
+      filter: none;
+    }
+
+    #video-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 1150px;
+      margin: 0 auto;
+    }
+
+    .tile {
+      position: relative;
+      padding-bottom: 177.77%; /* 16:9 aspect ratio */
+      overflow: hidden;
+      border-radius: 20px;
+      cursor: pointer;
+      background-color: black;
+    }
+
+    .tile iframe {
+      position: absolute;
+      top:0; left:0;
+      width:100%; height:100%;
+      border:none;
+      filter:blur(4px);
+      transition:filter 0.3s;
+      pointer-events: none;
+    }
+
+    .tile:hover iframe, 
+    .tile.active iframe {
+      filter: none;
+    }
+  </style>
+</head>
+<body>
+<h1>SOCIAL</h1>
+<div id="video-grid"></div>
+
+<script>
+const videoIds = [1101392507,1101392493,1101392480,1101392467,1101392450,1101392444,1101392376,1101392429,1101392418,1101392403,1101392396,1101392387,1101392368,1101392357,1101376171,1101376163,1101376152,1101376143,1101392350,1101376127,1101376116,1101392340,1101392328,1101392322,1101392311,1101392301,1101392288,1101392282];
+
+const grid = document.getElementById('video-grid');
+const tiles = [];
+
+videoIds.forEach(id => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+  iframe.allow = 'autoplay; fullscreen';
+  tile.appendChild(iframe);
+  grid.appendChild(tile);
+
+  const previewPlayer = new Vimeo.Player(iframe);
+
+  tile.addEventListener('click', () => {
+    if(tile.classList.contains('active')) return;
+
+    // Reset other tiles
+    tiles.forEach(t => {
+      if (t.classList.contains('active')) {
+        t.classList.remove('active');
+        const currentIframe = t.querySelector('iframe');
+        currentIframe.src = `https://player.vimeo.com/video/${t.dataset.id}?autoplay=1&muted=1&loop=1&background=1`;
+      }
+    });
+
+    tile.classList.add('active');
+    iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1`;
+
+    const activePlayer = new Vimeo.Player(iframe);
+    activePlayer.on('pause', () => {
+      tile.classList.remove('active');
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+    });
+    activePlayer.on('ended', () => {
+      tile.classList.remove('active');
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
+    });
+  });
+
+  tile.dataset.id = id;
+  tiles.push(tile);
+});
+</script>
+</body>
+</html>
