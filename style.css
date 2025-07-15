@@ -10,9 +10,7 @@ body {
   filter: blur(3px);
   transition: filter 0.3s;
 }
-#video-header:hover {
-  filter: none;
-}
+#video-header:hover { filter: none; }
 #video-grid {
   display: grid;
   grid-template-columns: repeat(4,1fr);
@@ -24,7 +22,7 @@ body {
 .tile {
   position: relative;
   width: 100%;
-  padding-bottom: 177.77%;
+  padding-bottom: 177.77%; /* 16:9 */
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
@@ -35,9 +33,7 @@ body {
   filter: blur(4px);
   transition: filter 0.3s;
 }
-.tile:hover .cover {
-  filter: none;
-}
+.tile:hover .cover { filter: none; }
 .tile iframe {
   width: 100%;
   height: 100%;
