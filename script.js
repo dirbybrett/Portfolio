@@ -12,6 +12,7 @@
     const tile = document.createElement('div');
     tile.className = 'tile';
 
+    // blurred preview
     const cover = document.createElement('iframe');
     cover.className = 'cover';
     cover.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1`;
@@ -19,17 +20,28 @@
     cover.allowFullscreen = true;
     tile.appendChild(cover);
 
+    // click → swap in player
     tile.addEventListener('click', () => {
       if (tile.classList.contains('active')) return;
       tile.classList.add('active');
       cover.remove();
-
       const player = document.createElement('iframe');
       player.className = 'player';
       player.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=0&controls=1&loop=1`;
       player.allow = 'autoplay; fullscreen';
       player.allowFullscreen = true;
       tile.appendChild(player);
+
+      // when paused or ended → revert to cover
+      const v = new Vimeo.Player(player);
+      const revert = () => {
+        player.remove();
+        tile.classList.remove('active');
+        tile.appendChild(cover);
+        v.unload();
+      };
+      v.on('pause',  revert);
+      v.on('ended',  revert);
     });
 
     grid.appendChild(tile);
