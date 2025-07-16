@@ -22,7 +22,6 @@
       filter: blur(3px);
       transition: filter 0.3s;
       max-width: 1150px;
-      text-align: left;
     }
     h1:hover {
       filter: none;
@@ -38,35 +37,15 @@
 
     .tile {
       position: relative;
-      padding-bottom: 177.77%;
+      padding-bottom: 177.77%; /* 16:9 */
       overflow: hidden;
       border-radius: 15px;
       cursor: pointer;
-      transform: translateY(60px);
-      opacity: 0;
-    }
-
-    .tile.visible {
-      animation: bounceIn 0.6s ease forwards;
-    }
-
-    @keyframes bounceIn {
-      0% {
-        opacity: 0;
-        transform: translateY(60px) scale(0.95);
-      }
-      50% {
-        opacity: 1;
-        transform: translateY(-8px) scale(1.01);
-      }
-      100% {
-        transform: translateY(0) scale(1);
-      }
+      transition: transform 0.3s ease;
     }
 
     .tile:hover {
       transform: scale(1.01);
-      transition: transform 0.3s ease;
     }
 
     .tile iframe {
@@ -126,7 +105,7 @@ videoIds.forEach(id => {
   tile.addEventListener('click', () => {
     if (tile.classList.contains('active')) return;
 
-    // Reset previous active tile
+    // Remove active state from previous tile
     if (activeTile) {
       activeTile.classList.remove('active');
       const prevId = activeTile.dataset.id;
@@ -146,6 +125,7 @@ videoIds.forEach(id => {
       player.play();
     });
 
+    // When video is paused or ends, restore preview mode
     const restorePreview = () => {
       tile.classList.remove('active');
       player.setVolume(0);
@@ -160,24 +140,6 @@ videoIds.forEach(id => {
     player.on('ended', restorePreview);
   });
 });
-
-// Bounce on scroll
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
-    }
-  });
-}, {
-  threshold: 0.2
-});
-
-// Defer observing until tiles exist
-window.addEventListener('load', () => {
-  document.querySelectorAll('.tile').forEach(tile => observer.observe(tile));
-});
 </script>
-
 </body>
-</html>
+</html> 
