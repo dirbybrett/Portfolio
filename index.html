@@ -24,7 +24,6 @@
       max-width: 1150px;
       text-align: left;
     }
-
     h1:hover {
       filter: none;
     }
@@ -39,13 +38,12 @@
 
     .tile {
       position: relative;
-      padding-bottom: 177.77%; /* 16:9 */
+      padding-bottom: 177.77%;
       overflow: hidden;
       border-radius: 15px;
       cursor: pointer;
+      transform: translateY(60px);
       opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
     }
 
     .tile.visible {
@@ -55,11 +53,11 @@
     @keyframes bounceIn {
       0% {
         opacity: 0;
-        transform: translateY(60px) scale(0.9);
+        transform: translateY(60px) scale(0.95);
       }
-      60% {
+      50% {
         opacity: 1;
-        transform: translateY(-8px) scale(1.02);
+        transform: translateY(-8px) scale(1.01);
       }
       100% {
         transform: translateY(0) scale(1);
@@ -68,6 +66,7 @@
 
     .tile:hover {
       transform: scale(1.01);
+      transition: transform 0.3s ease;
     }
 
     .tile iframe {
@@ -162,19 +161,22 @@ videoIds.forEach(id => {
   });
 });
 
-// Scroll Bounce Animation Observer
-const tiles = document.querySelectorAll('.tile');
-
-const observer = new IntersectionObserver(entries => {
+// Bounce on scroll
+const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
       observer.unobserve(entry.target);
     }
   });
-}, { threshold: 0.2 });
+}, {
+  threshold: 0.2
+});
 
-tiles.forEach(tile => observer.observe(tile));
+// Defer observing until tiles exist
+window.addEventListener('load', () => {
+  document.querySelectorAll('.tile').forEach(tile => observer.observe(tile));
+});
 </script>
 
 </body>
